@@ -58,7 +58,7 @@ jobs:
     - name: Build with CMake
       run: |
         mkdir build
-        cdbuild
+        cd build
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
       
