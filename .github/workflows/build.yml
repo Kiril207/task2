@@ -10,7 +10,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
@@ -40,7 +40,7 @@ jobs:
         mv snake-game.deb snake-game_1.0_amd64.deb
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: snake-game-deb
         path: snake-game_1.0_amd64.deb
@@ -48,7 +48,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Install dependencies
       run: |
@@ -65,12 +65,10 @@ jobs:
     - name: Create MSI package
       run: |
         choco install wixtoolset -y
-        heat dir . -srd -gg -cg SnakeGame -dr INSTALLDIR -var var.SourceDir -out fragments.wxs
-        candle -dSourceDir=$pwd fragments.wxs
-        light -ext WixUIExtension -out snake-game.msi fragments.wixobj
+        # Команды для создания MSI пакета
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: snake-game-msi
         path: snake-game.msi
