@@ -1,0 +1,11 @@
+src/SFML/Audio/CMakeFiles/sfml-audio.dir/SoundSource.cpp.o: \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/src/SFML/Audio/SoundSource.cpp \
+ /usr/include/stdc-predef.h \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/Audio/SoundSource.hpp \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/Audio/Export.hpp \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/Config.hpp \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/Audio/AlResource.hpp \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/System/Vector3.hpp \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/include/SFML/System/Vector3.inl \
+ /home/Kirill/Kiril207/workspace/projects/16-Games/04/SFML-2.5.1/src/SFML/Audio/ALCheck.hpp \
+ /usr/include/AL/al.h /usr/include/AL/alc.h
