@@ -54,14 +54,14 @@ jobs:
       run: |
         choco install sfml -y
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-        
+
     - name: Build with CMake
       run: |
         mkdir build
-        cd build
-        cmake ..
-        cmake --build . --config Release
-        
+        cdbuild
+        cmake -DSFML_DIR="C:/tools/SFML" ..
+        cmake --build . --config Release --target install
+      
     - name: Create MSI package
       run: |
         choco install wixtoolset -y
