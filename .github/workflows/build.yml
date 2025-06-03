@@ -1,0 +1,76 @@
+name: Build and Package Snake Game
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang cmake libsfml-dev
+        
+    - name: Build with CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_CXX_COMPILER=clang++ ..
+        make
+        
+    - name: Create DEB package
+      run: |
+        mkdir -p snake-game/usr/games
+        cp build/snake snake-game/usr/games/
+        mkdir -p snake-game/DEBIAN
+        echo "Package: snake-game" > snake-game/DEBIAN/control
+        echo "Version: 1.0" >> snake-game/DEBIAN/control
+        echo "Section: games" >> snake-game/DEBIAN/control
+        echo "Priority: optional" >> snake-game/DEBIAN/control
+        echo "Architecture: amd64" >> snake-game/DEBIAN/control
+        echo "Maintainer: Your Name <your.email@example.com>" >> snake-game/DEBIAN/control
+        echo "Description: Simple Snake Game" >> snake-game/DEBIAN/control
+        dpkg-deb --build snake-game
+        mv snake-game.deb snake-game_1.0_amd64.deb
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: snake-game-deb
+        path: snake-game_1.0_amd64.deb
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        choco install sfml -y
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        
+    - name: Build with CMake
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --config Release
+        
+    - name: Create MSI package
+      run: |
+        choco install wixtoolset -y
+        heat dir . -srd -gg -cg SnakeGame -dr INSTALLDIR -var var.SourceDir -out fragments.wxs
+        candle -dSourceDir=$pwd fragments.wxs
+        light -ext WixUIExtension -out snake-game.msi fragments.wixobj
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: snake-game-msi
+        path: snake-game.msi
