@@ -71,50 +71,39 @@ jobs:
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
 
-    - name: Create MSI package with all DLLs
-      shell: pwsh
+    - name: Create MSI package
       run: |
         $componentGuid = [guid]::NewGuid().ToString().ToUpper()
         $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
-        Copy-Item -Path "build/Release/*.dll" -Destination "pkg/INSTALLDIR/" -Force
-
-        $dllFiles = Get-ChildItem -Path "pkg/INSTALLDIR" -Filter "*.dll"
-        $fileEntries = ""
-        foreach ($dll in $dllFiles) {
-          $id = $dll.BaseName.Replace("-", "").Replace(".", "")
-          $fileEntries += "            <File Id=""$id"" Source=""pkg/INSTALLDIR/$($dll.Name)"" KeyPath=""no"" />`n"
-        }
-
         $productWxs = @"
-        <?xml version=""1.0""?>
-        <Wix xmlns=""http://schemas.microsoft.com/wix/2006/wi"">
+        <?xml version="1.0"?>
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
           <Product 
-            Id=""*"" 
-            Name=""Snake Game"" 
-            Version=""1.0"" 
-            Manufacturer=""YourCompany"" 
-            Language=""1033""
-            UpgradeCode=""$upgradeGuid"">
-            <Package InstallerVersion=""200"" Compressed=""yes""/>
-            <MediaTemplate EmbedCab=""yes""/>
-            <Directory Id=""TARGETDIR"" Name=""SourceDir"">
-              <Directory Id=""ProgramFilesFolder"">
-                <Directory Id=""INSTALLDIR"" Name=""Snake Game"">
-                  <Component Id=""MainComponent"" Guid=""$componentGuid"">
-                    <File Id=""SnakeEXE"" Source=""pkg/INSTALLDIR/snake.exe"" KeyPath=""yes""/>
-$fileEntries
+            Id="*" 
+            Name="Snake Game" 
+            Version="1.0" 
+            Manufacturer="YourCompany" 
+            Language="1033"
+            UpgradeCode="$upgradeGuid">
+            <Package InstallerVersion="200" Compressed="yes"/>
+            <MediaTemplate EmbedCab="yes"/>
+            <Directory Id="TARGETDIR" Name="SourceDir">
+              <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLDIR" Name="Snake Game">
+                  <Component Id="MainComponent" Guid="$componentGuid">
+                    <File Id="SnakeEXE" Source="pkg/INSTALLDIR/snake.exe" KeyPath="yes"/>
                   </Component>
                 </Directory>
               </Directory>
             </Directory>
-            <Feature Id=""MainFeature"" Title=""Main Feature"" Level=""1"">
-              <ComponentRef Id=""MainComponent""/>
+            <Feature Id="MainFeature" Title="Main Feature" Level="1">
+              <ComponentRef Id="MainComponent"/>
             </Feature>
-            <UIRef Id=""WixUI_InstallDir"" />
-            <UIRef Id=""WixUI_ErrorProgressText"" />
-            <Property Id=""WIXUI_INSTALLDIR"" Value=""INSTALLDIR"" />
+            <UIRef Id="WixUI_InstallDir" />
+            <UIRef Id="WixUI_ErrorProgressText" />
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
           </Product>
         </Wix>
         "@
