@@ -71,13 +71,6 @@ jobs:
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
 
-    - name: Copy SFML DLLs
-      shell: pwsh
-      run: |
-        Copy-Item "C:/tools/SFML/bin/sfml-graphics-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "C:/tools/SFML/bin/sfml-window-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "C:/tools/SFML/bin/sfml-system-2.dll" -Destination "build/Release/" -Force
-
     - name: Create MSI package with all DLLs
       shell: pwsh
       run: |
@@ -91,7 +84,7 @@ jobs:
         $fileEntries = ""
         foreach ($dll in $dllFiles) {
           $id = $dll.BaseName.Replace("-", "").Replace(".", "")
-          $fileEntries += "                    <File Id=""$id"" Source=""pkg/INSTALLDIR/$($dll.Name)"" KeyPath=""no"" />`n"
+          $fileEntries += "            <File Id=""$id"" Source=""pkg/INSTALLDIR/$($dll.Name)"" KeyPath=""no"" />`n"
         }
 
         $productWxs = @"
@@ -129,17 +122,16 @@ $fileEntries
         candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
         if (Test-Path snake-game.msi) {
-          Write-Host "MSI package created successfully!"
+          echo "MSI package created successfully!"
         } else {
-          Write-Host "Failed to create MSI package!"
+          echo "Failed to create MSI package!"
           exit 1
         }
 
     - name: Check MSI exists before upload
-      shell: pwsh
       run: |
         if (!(Test-Path -Path "snake-game.msi")) {
-          Write-Host "snake-game.msi not found!"
+          echo "snake-game.msi not found!"
           exit 1
         }
 
