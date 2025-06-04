@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.5...3.25)
 project(Snake LANGUAGES CXX)
 
 # 1. Настройка версии и метаданных для пакета
