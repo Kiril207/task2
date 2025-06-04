@@ -11,19 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y clang cmake libsfml-dev
-        
+
     - name: Build with CMake
       run: |
         mkdir build
         cd build
         cmake -DCMAKE_CXX_COMPILER=clang++ ..
         make
-        
+
     - name: Create DEB package
       run: |
         mkdir -p snake-game/usr/games
@@ -38,7 +38,7 @@ jobs:
         echo "Description: Simple Snake Game" >> snake-game/DEBIAN/control
         dpkg-deb --build snake-game
         mv snake-game.deb snake-game_1.0_amd64.deb
-        
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
@@ -49,12 +49,13 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install dependencies
       run: |
         choco install sfml -y
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-        choco install wixtoolset -y  # Установка WiX Toolset
+        choco install wixtoolset -y
+
     - name: Install SFML
       run: |
         mkdir -p "C:/tools/SFML"
@@ -62,25 +63,20 @@ jobs:
         Invoke-WebRequest -Uri $url -OutFile "sfml.zip"
         Expand-Archive -Path "sfml.zip" -DestinationPath "C:/tools/SFML"
         echo "C:/tools/SFML/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-    
+
     - name: Build with CMake
       run: |
         mkdir build
         cd build
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
-      
+
     - name: Create MSI package
       run: |
-        # Генерируем GUID для компонента
         $componentGuid = [guid]::NewGuid().ToString().ToUpper()
         $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
-        
-        # Создаем структуру папок
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
-        
-        # Создаем WXS-файл с корректными GUID
         $productWxs = @"
         <?xml version="1.0"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -93,7 +89,6 @@ jobs:
             UpgradeCode="$upgradeGuid">
             <Package InstallerVersion="200" Compressed="yes"/>
             <MediaTemplate EmbedCab="yes"/>
-            
             <Directory Id="TARGETDIR" Name="SourceDir">
               <Directory Id="ProgramFilesFolder">
                 <Directory Id="INSTALLDIR" Name="Snake Game">
@@ -103,7 +98,6 @@ jobs:
                 </Directory>
               </Directory>
             </Directory>
-            
             <Feature Id="MainFeature" Title="Main Feature" Level="1">
               <ComponentRef Id="MainComponent"/>
             </Feature>
@@ -111,40 +105,24 @@ jobs:
         </Wix>
         "@
         Set-Content -Path product.wxs -Value $productWxs
-        
-        # Компилируем и собираем MSI
         candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
-        
         if (Test-Path snake-game.msi) {
           echo "MSI package created successfully!"
         } else {
           echo "Failed to create MSI package!"
           exit 1
         }
-    
-    - name: Verify Required Files
-      run: |
-        if (!(Test-Path -Path "build/Release/snake.exe")) {
-          echo "Error: snake.exe not found in build/Release!"
-          exit 1
-        }
-        if (!(Test-Path -Path "product.wxs")) {
-          echo "Error: product.wxs not found!"
-          exit 1
-        }
-    - name: Verify MSI Creation
+
+    - name: Check MSI exists before upload
       run: |
         if (!(Test-Path -Path "snake-game.msi")) {
-          echo "Error: MSI file not created!"
+          echo "snake-game.msi not found!"
           exit 1
         }
-    - name: Move MSI and DEB to release
-      run: |
-        mkdir -p release
-        if (Test-Path -Path "snake-game.msi") {
-          mv snake-game.msi release/
-        }
-        if (Test-Path -Path "snake-game_1.0_amd64.deb") {
-          mv snake-game_1.0_amd64.deb release/
-        }
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: snake-game-msi
+        path: snake-game.msi
