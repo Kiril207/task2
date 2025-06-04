@@ -5,7 +5,9 @@ project(Snake)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
-set(SFML_DIR "C:/SFML-2.5.1/lib/cmake/SFML")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
 
 find_package(SFML REQUIRED network audio graphics window system)
