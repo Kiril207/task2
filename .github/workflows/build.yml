@@ -139,3 +139,12 @@ jobs:
           echo "Error: MSI file not created!"
           exit 1
         }
+    - name: Move MSI and DEB to release
+      run: |
+        mkdir -p release
+        if (Test-Path -Path "snake-game.msi") {
+          mv snake-game.msi release/
+        }
+        if (Test-Path -Path "snake-game_1.0_amd64.deb") {
+          mv snake-game_1.0_amd64.deb release/
+        }
