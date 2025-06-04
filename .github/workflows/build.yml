@@ -56,27 +56,31 @@ jobs:
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
         choco install wixtoolset -y
 
-    - name: Install SFML
-      run: |
-        mkdir -p "C:/tools/SFML"
-        $url = "https://www.sfml-dev.org/files/SFML-2.6.1-windows-vc17-64-bit.zip"
-        Invoke-WebRequest -Uri $url -OutFile "sfml.zip"
-        Expand-Archive -Path "sfml.zip" -DestinationPath "C:/tools/SFML"
-        echo "C:/tools/SFML/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-
     - name: Build with CMake
       run: |
         mkdir build
         cd build
-        cmake -DSFML_DIR="C:/tools/SFML" ..
+        cmake -DSFML_DIR="C:/ProgramData/chocolatey/lib/sfml/tools/cmake" ..
         cmake --build . --config Release --target install
 
+    - name: Copy SFML DLLs
+      shell: pwsh
+      run: |
+        $dllPath = "C:/ProgramData/chocolatey/lib/sfml/tools/bin"
+        Copy-Item "$dllPath/sfml-graphics-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "$dllPath/sfml-window-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "$dllPath/sfml-system-2.dll" -Destination "build/Release/" -Force
+
     - name: Create MSI package
+      shell: pwsh
       run: |
         $componentGuid = [guid]::NewGuid().ToString().ToUpper()
         $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
+        Copy-Item -Path "build/Release/sfml-graphics-2.dll" -Destination "pkg/INSTALLDIR/" -Force
+        Copy-Item -Path "build/Release/sfml-window-2.dll" -Destination "pkg/INSTALLDIR/" -Force
+        Copy-Item -Path "build/Release/sfml-system-2.dll" -Destination "pkg/INSTALLDIR/" -Force
         $productWxs = @"
         <?xml version="1.0"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -94,6 +98,9 @@ jobs:
                 <Directory Id="INSTALLDIR" Name="Snake Game">
                   <Component Id="MainComponent" Guid="$componentGuid">
                     <File Id="SnakeEXE" Source="pkg/INSTALLDIR/snake.exe" KeyPath="yes"/>
+                    <File Id="SFMLGraphics" Source="pkg/INSTALLDIR/sfml-graphics-2.dll" KeyPath="no"/>
+                    <File Id="SFMLWindow" Source="pkg/INSTALLDIR/sfml-window-2.dll" KeyPath="no"/>
+                    <File Id="SFMLSystem" Source="pkg/INSTALLDIR/sfml-system-2.dll" KeyPath="no"/>
                   </Component>
                 </Directory>
               </Directory>
@@ -111,16 +118,17 @@ jobs:
         candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
         if (Test-Path snake-game.msi) {
-          echo "MSI package created successfully!"
+          Write-Host "MSI package created successfully!"
         } else {
-          echo "Failed to create MSI package!"
+          Write-Host "Failed to create MSI package!"
           exit 1
         }
 
     - name: Check MSI exists before upload
+      shell: pwsh
       run: |
         if (!(Test-Path -Path "snake-game.msi")) {
-          echo "snake-game.msi not found!"
+          Write-Host "snake-game.msi not found!"
           exit 1
         }
 
