@@ -72,25 +72,47 @@ jobs:
       
     - name: Create MSI package
       run: |
-        # Создаём временную структуру папок для установки
-        mkdir -p pkg/INSTALLDIR
-        cp build/Release/snake.exe pkg/INSTALLDIR/  # Копируем собранный .exe
-        
-        # Генерируем .wxs-файл для WiX
-        heat dir pkg -cg SnakeGame -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -var var.SourceDir -out snake-game.wxs
-        
-        # Компилируем .wxs в .msi
-        candle -ext WixUIExtension snake-game.wxs -dSourceDir=pkg
-        light -ext WixUIExtension -out snake-game.msi snake-game.wixobj
-        
-        # Проверяем, что .msi создался
-        if (Test-Path snake-game.msi) {
-          echo "MSI package created successfully!"
-        } else {
-          echo "Failed to create MSI package!"
-          exit 1
-        }
-        
+        ###
+        - name: Create MSI package
+  run: |
+    # 1. Создаём структуру папок для установки
+    mkdir -p pkg/INSTALLDIR
+    cp build/Release/snake.exe pkg/INSTALLDIR/  # Убедитесь, что путь к .exe верный!
+
+    # 2. Генерируем .wxs-файл с помощью heat
+    heat dir pkg -cg SnakeGame -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -var var.SourceDir -out snake-game.wxs
+
+    # 3. Компилируем .wxs в .wixobj
+    candle -ext WixUIExtension snake-game.wxs -dSourceDir=pkg -out snake-game.wixobj
+
+    # 4. Создаём минимальный .wxs-файл с секцией Product (если heat не добавил её)
+    $productWxs = @"
+    <?xml version="1.0"?>
+    <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+      <Product Id="*" Name="Snake Game" Version="1.0" Manufacturer="YourName" Language="1033">
+        <Package InstallerVersion="200" Compressed="yes"/>
+        <DirectoryRef Id="INSTALLDIR"/>
+        <Feature Id="MainFeature" Title="Snake Game" Level="1">
+          <ComponentGroupRef Id="SnakeGame"/>
+        </Feature>
+      </Product>
+    </Wix>
+    "@
+    Set-Content -Path product.wxs -Value $productWxs
+
+    # 5. Компилируем product.wxs
+    candle -ext WixUIExtension product.wxs -out product.wixobj
+
+    # 6. Собираем .msi (теперь передаём оба .wixobj)
+    light -ext WixUIExtension -out snake-game.msi product.wixobj snake-game.wixobj
+
+    # Проверяем, что .msi создался
+    if (Test-Path snake-game.msi) {
+      echo "MSI package created successfully!"
+    } else {
+      echo "Failed to create MSI package!"
+      exit 1
+    }
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
