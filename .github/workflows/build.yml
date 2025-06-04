@@ -54,7 +54,14 @@ jobs:
       run: |
         choco install sfml -y
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-
+    - name: Install SFML
+      run: |
+        mkdir -p "C:/tools/SFML"
+        $url = "https://www.sfml-dev.org/files/SFML-2.6.1-windows-vc17-64-bit.zip"
+        Invoke-WebRequest -Uri $url -OutFile "sfml.zip"
+        Expand-Archive -Path "sfml.zip" -DestinationPath "C:/tools/SFML"
+        echo "C:/tools/SFML/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+    
     - name: Build with CMake
       run: |
         mkdir build
