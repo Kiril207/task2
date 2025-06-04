@@ -93,23 +93,21 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/images)
     )
 endif()
 
-# 10. Дополнительные настройки для Windows (!!! ОБНОВЛЁНО !!!)
+# 10. Дополнительные настройки для Windows (ОБНОВЛЕНО: путь к DLL из chocolatey)
 if(WIN32)
-    # Копирование DLL SFML из C:/tools/SFML/bin в папку со snake.exe после сборки
     add_custom_command(TARGET snake POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "C:/tools/SFML/bin/sfml-graphics-2.dll"
-            "C:/tools/SFML/bin/sfml-window-2.dll"
-            "C:/tools/SFML/bin/sfml-system-2.dll"
+            "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-graphics-2.dll"
+            "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-window-2.dll"
+            "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-system-2.dll"
             "$<TARGET_FILE_DIR:snake>"
         COMMENT "Копирование DLL SFML"
     )
 
-    # Установка DLL при инсталляции (для completeness, не требуется для GitHub Actions)
     install(FILES
-        "C:/tools/SFML/bin/sfml-graphics-2.dll"
-        "C:/tools/SFML/bin/sfml-window-2.dll"
-        "C:/tools/SFML/bin/sfml-system-2.dll"
+        "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-graphics-2.dll"
+        "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-window-2.dll"
+        "C:/ProgramData/chocolatey/lib/sfml/tools/bin/sfml-system-2.dll"
         DESTINATION bin
     )
 endif()
