@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(Snake LANGUAGES CXX)
 
-# 1. Автозагрузка SFML через FetchContent (если не найден в системе)
+# 1. Автозагрузка SFML через FetchContent 
 include(FetchContent)
 
 set(SFML_VERSION 2.5.1)  # Желаемая версия SFML
