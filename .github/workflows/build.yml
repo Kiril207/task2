@@ -104,7 +104,7 @@ jobs:
                 <Directory Id=""INSTALLDIR"" Name=""Snake Game"">
                   <Component Id=""MainComponent"" Guid=""$componentGuid"">
                     <File Id=""SnakeEXE"" Source=""pkg/INSTALLDIR/snake.exe"" KeyPath=""yes""/>
-$fileEntries
+@@FILES@@
                   </Component>
                 </Directory>
               </Directory>
@@ -118,6 +118,8 @@ $fileEntries
           </Product>
         </Wix>
         "@
+
+        $productWxs = $productWxs.Replace('@@FILES@@', $fileEntries)
         Set-Content -Path product.wxs -Value $productWxs
         candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
