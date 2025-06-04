@@ -71,6 +71,13 @@ jobs:
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
 
+    - name: Copy SFML DLLs
+      shell: pwsh
+      run: |
+        Copy-Item "C:/tools/SFML/bin/sfml-graphics-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "C:/tools/SFML/bin/sfml-window-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "C:/tools/SFML/bin/sfml-system-2.dll" -Destination "build/Release/" -Force
+
     - name: Create MSI package with all DLLs
       shell: pwsh
       run: |
@@ -104,7 +111,7 @@ jobs:
                 <Directory Id=""INSTALLDIR"" Name=""Snake Game"">
                   <Component Id=""MainComponent"" Guid=""$componentGuid"">
                     <File Id=""SnakeEXE"" Source=""pkg/INSTALLDIR/snake.exe"" KeyPath=""yes""/>
-@@FILES@@
+$fileEntries
                   </Component>
                 </Directory>
               </Directory>
@@ -118,8 +125,6 @@ jobs:
           </Product>
         </Wix>
         "@
-
-        $productWxs = $productWxs.Replace('@@FILES@@', $fileEntries)
         Set-Content -Path product.wxs -Value $productWxs
         candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
