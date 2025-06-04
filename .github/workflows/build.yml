@@ -133,3 +133,9 @@ jobs:
           echo "Error: product.wxs not found!"
           exit 1
         }
+    - name: Verify MSI Creation
+      run: |
+        if (!(Test-Path -Path "snake-game.msi")) {
+          echo "Error: MSI file not created!"
+          exit 1
+        }
