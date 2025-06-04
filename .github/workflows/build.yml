@@ -54,6 +54,7 @@ jobs:
       run: |
         choco install sfml -y
         choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        choco install wixtoolset -y  # Установка WiX Toolset
     - name: Install SFML
       run: |
         mkdir -p "C:/tools/SFML"
@@ -71,8 +72,24 @@ jobs:
       
     - name: Create MSI package
       run: |
-        choco install wixtoolset -y
-        # Команды для создания MSI пакета
+        # Создаём временную структуру папок для установки
+        mkdir -p pkg/INSTALLDIR
+        cp build/Release/snake.exe pkg/INSTALLDIR/  # Копируем собранный .exe
+        
+        # Генерируем .wxs-файл для WiX
+        heat dir pkg -cg SnakeGame -gg -scom -sreg -sfrag -srd -dr INSTALLDIR -var var.SourceDir -out snake-game.wxs
+        
+        # Компилируем .wxs в .msi
+        candle -ext WixUIExtension snake-game.wxs -dSourceDir=pkg
+        light -ext WixUIExtension -out snake-game.msi snake-game.wixobj
+        
+        # Проверяем, что .msi создался
+        if (Test-Path snake-game.msi) {
+          echo "MSI package created successfully!"
+        } else {
+          echo "Failed to create MSI package!"
+          exit 1
+        }
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
