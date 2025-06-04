@@ -72,28 +72,38 @@ jobs:
       
     - name: Create MSI package
       run: |
-        # Создаем структуру папок для установки
+        # Генерируем GUID для компонента
+        $componentGuid = [guid]::NewGuid().ToString().ToUpper()
+        $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
+        
+        # Создаем структуру папок
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
-
-        # Генерируем базовый WXS-файл
+        
+        # Создаем WXS-файл с корректными GUID
         $productWxs = @"
         <?xml version="1.0"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-          <Product Id="*" Name="Snake Game" Version="1.0" Manufacturer="YourName" Language="1033">
-            <Package InstallerVersion="200" Compressed="yes" Comments="Snake Game Installer"/>
+          <Product 
+            Id="*" 
+            Name="Snake Game" 
+            Version="1.0" 
+            Manufacturer="YourCompany" 
+            Language="1033"
+            UpgradeCode="$upgradeGuid">
+            <Package InstallerVersion="200" Compressed="yes"/>
             <MediaTemplate EmbedCab="yes"/>
-
+            
             <Directory Id="TARGETDIR" Name="SourceDir">
               <Directory Id="ProgramFilesFolder">
                 <Directory Id="INSTALLDIR" Name="Snake Game">
-                  <Component Id="MainComponent" Guid="YOUR-GUID-HERE">
+                  <Component Id="MainComponent" Guid="$componentGuid">
                     <File Id="SnakeEXE" Source="pkg/INSTALLDIR/snake.exe" KeyPath="yes"/>
                   </Component>
                 </Directory>
               </Directory>
             </Directory>
-
+            
             <Feature Id="MainFeature" Title="Main Feature" Level="1">
               <ComponentRef Id="MainComponent"/>
             </Feature>
@@ -101,15 +111,13 @@ jobs:
         </Wix>
         "@
         Set-Content -Path product.wxs -Value $productWxs
-
+        
         # Компилируем и собираем MSI
-        candle.exe product.wxs -ext WixUIExtension
+        candle.exe product.wxs
         light.exe product.wixobj -ext WixUIExtension -out snake-game.msi
-
-        # Проверяем результат
+        
         if (Test-Path snake-game.msi) {
           echo "MSI package created successfully!"
-          Get-Item snake-game.msi
         } else {
           echo "Failed to create MSI package!"
           exit 1
