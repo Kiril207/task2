@@ -23,13 +23,13 @@ find_package(SFML ${SFML_VERSION} QUIET COMPONENTS graphics window system audio 
 
 if(NOT SFML_FOUND)
     message(STATUS "SFML не найден, пробуем скачать...")
-    
+
     # Альтернативные источники для загрузки SFML
     set(SFML_URL_OPTIONS
         URL https://www.sfml-dev.org/files/SFML-${SFML_VERSION}-sources.zip
         URL https://github.com/SFML/SFML/archive/refs/tags/${SFML_VERSION}.zip
     )
-    
+
     FetchContent_Declare(
         sfml
         ${SFML_URL_OPTIONS}
@@ -37,18 +37,18 @@ if(NOT SFML_FOUND)
         BINARY_DIR ${CMAKE_BINARY_DIR}/_deps/sfml-build
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
-    
+
     # Настройка параметров сборки SFML
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries")
     set(SFML_BUILD_DOC FALSE CACHE BOOL "Don't build documentation")
     set(SFML_BUILD_EXAMPLES FALSE CACHE BOOL "Don't build examples")
-    
+
     FetchContent_MakeAvailable(sfml)
-    
+
     # Установка путей для собранного SFML
     set(SFML_ROOT ${CMAKE_BINARY_DIR}/_deps/sfml-build)
     set(SFML_INCLUDE_DIR ${CMAKE_BINARY_DIR}/_deps/sfml-src/include)
-    
+
     # Повторная проверка после сборки
     find_package(SFML ${SFML_VERSION} REQUIRED COMPONENTS graphics window system audio network)
 endif()
@@ -93,27 +93,23 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/images)
     )
 endif()
 
-# 10. Дополнительные настройки для Windows
+# 10. Дополнительные настройки для Windows (!!! ОБНОВЛЁНО !!!)
 if(WIN32)
-    # Копирование DLL
+    # Копирование DLL SFML из C:/tools/SFML/bin в папку со snake.exe после сборки
     add_custom_command(TARGET snake POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:sfml-graphics>"
-        "$<TARGET_FILE:sfml-window>"
-        "$<TARGET_FILE:sfml-system>"
-        "$<TARGET_FILE:sfml-audio>"
-        "$<TARGET_FILE:sfml-network>"
-        "$<TARGET_FILE_DIR:snake>"
+            "C:/tools/SFML/bin/sfml-graphics-2.dll"
+            "C:/tools/SFML/bin/sfml-window-2.dll"
+            "C:/tools/SFML/bin/sfml-system-2.dll"
+            "$<TARGET_FILE_DIR:snake>"
         COMMENT "Копирование DLL SFML"
     )
-    
-    # Установка DLL при инсталляции
+
+    # Установка DLL при инсталляции (для completeness, не требуется для GitHub Actions)
     install(FILES
-        "$<TARGET_FILE:sfml-graphics>"
-        "$<TARGET_FILE:sfml-window>"
-        "$<TARGET_FILE:sfml-system>"
-        "$<TARGET_FILE:sfml-audio>"
-        "$<TARGET_FILE:sfml-network>"
+        "C:/tools/SFML/bin/sfml-graphics-2.dll"
+        "C:/tools/SFML/bin/sfml-window-2.dll"
+        "C:/tools/SFML/bin/sfml-system-2.dll"
         DESTINATION bin
     )
 endif()
