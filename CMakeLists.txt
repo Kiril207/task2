@@ -43,7 +43,7 @@ else()
     if(NOT SFML_FOUND)
         message(FATAL_ERROR "SFML не найден и не может быть загружен автоматически")
     endif()
-endif()
+endif()ф
 
 add_executable(snake main.cpp)
 target_compile_features(snake PRIVATE cxx_std_17)
