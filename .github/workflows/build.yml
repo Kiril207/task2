@@ -71,9 +71,6 @@ jobs:
         cmake --build . --config Release --target install
       
     - name: Create MSI package
-      run: |
-        ###
-        - name: Create MSI package
   run: |
     # 1. Создаём структуру папок для установки
     mkdir -p pkg/INSTALLDIR
