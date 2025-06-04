@@ -71,12 +71,23 @@ jobs:
         cmake -DSFML_DIR="C:/tools/SFML" ..
         cmake --build . --config Release --target install
 
-    - name: Create MSI package
+    - name: Create MSI package with all DLLs
       run: |
         $componentGuid = [guid]::NewGuid().ToString().ToUpper()
         $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
+        # Копируем все DLL SFML и другие зависимости
+        Copy-Item -Path "build/Release/*.dll" -Destination "pkg/INSTALLDIR/" -Force
+
+        # Формируем секцию файлов для WXS
+        $dllFiles = Get-ChildItem -Path "pkg/INSTALLDIR" -Filter "*.dll"
+        $fileEntries = ""
+        foreach ($dll in $dllFiles) {
+          $id = $dll.BaseName.Replace("-", "").Replace(".", "")
+          $fileEntries += "            <File Id=`"$id`" Source=`"pkg/INSTALLDIR/$($dll.Name)`" KeyPath=`"no`" />`n"
+        }
+
         $productWxs = @"
         <?xml version="1.0"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -94,6 +105,7 @@ jobs:
                 <Directory Id="INSTALLDIR" Name="Snake Game">
                   <Component Id="MainComponent" Guid="$componentGuid">
                     <File Id="SnakeEXE" Source="pkg/INSTALLDIR/snake.exe" KeyPath="yes"/>
+$fileEntries
                   </Component>
                 </Directory>
               </Directory>
