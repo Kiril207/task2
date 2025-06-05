@@ -11,11 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang cmake libsfml-dev
+        sudo apt-get install -y clang cmake
 
     - name: Build with CMake
       run: |
@@ -49,32 +51,23 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-    - name: Build SFML from source
+    - name: Install dependencies
       run: |
-        mkdir SFML-2.5.1-build
-        cd SFML-2.5.1-build
-        cmake ../SFML-2.5.1 -DBUILD_SHARED_LIBS=ON
-        cmake --build . --config Release
-
-    - name: Debug SFML Build Output
-      run: |
-        dir "${{ github.workspace }}\SFML-2.5.1-build\bin\Release"
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        choco install wixtoolset -y
 
     - name: Build with CMake
       run: |
         mkdir build
         cd build
-        cmake -DSFML_DIR="${{ github.workspace }}\SFML-2.5.1-build" ..
+        cmake ..
         cmake --build . --config Release
 
-    - name: Copy SFML DLLs
-      shell: pwsh
-      run: |
-        $dllPath = "${{ github.workspace }}\SFML-2.5.1-build\bin\Release"
-        Copy-Item "$dllPath\sfml-graphics-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "$dllPath\sfml-window-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "$dllPath\sfml-system-2.dll" -Destination "build/Release/" -Force
+    # Если потребуется копировать DLL для MSI, можно добавить шаг копирования как раньше,
+    # но если snake.exe запускается из build/Release, SFML DLL уже должны быть рядом с .exe
 
     - name: Create MSI package
       shell: pwsh
@@ -83,9 +76,7 @@ jobs:
         $upgradeGuid = [guid]::NewGuid().ToString().ToUpper()
         mkdir -p pkg/INSTALLDIR
         Copy-Item -Path "build/Release/snake.exe" -Destination "pkg/INSTALLDIR/"
-        Copy-Item -Path "build/Release/sfml-graphics-2.dll" -Destination "pkg/INSTALLDIR/" -Force
-        Copy-Item -Path "build/Release/sfml-window-2.dll" -Destination "pkg/INSTALLDIR/" -Force
-        Copy-Item -Path "build/Release/sfml-system-2.dll" -Destination "pkg/INSTALLDIR/" -Force
+        Get-ChildItem -Path "build/Release" -Filter "sfml-*.dll" | ForEach-Object { Copy-Item $_.FullName -Destination "pkg/INSTALLDIR/" -Force }
         $productWxs = @"
         <?xml version="1.0"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
