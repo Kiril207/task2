@@ -50,17 +50,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Build SFML from source
+      run: |
+        mkdir SFML-2.5.1-build
+        cd SFML-2.5.1-build
+        cmake ../SFML-2.5.1 -DBUILD_SHARED_LIBS=ON
+        cmake --build . --config Release
+
+    - name: Debug SFML Build Output
+      run: |
+        dir "${{ github.workspace }}\SFML-2.5.1-build\bin\Release"
+
     - name: Build with CMake
       run: |
         mkdir build
         cd build
-        cmake -DSFML_DIR="${{ github.workspace }}/SFML-2.5.1/lib/cmake/SFML" ..
-        cmake --build . --config Release --target install
+        cmake -DSFML_DIR="${{ github.workspace }}\SFML-2.5.1-build" ..
+        cmake --build . --config Release
 
     - name: Copy SFML DLLs
       shell: pwsh
       run: |
-        $dllPath = "${{ github.workspace }}\SFML-2.5.1\bin"
+        $dllPath = "${{ github.workspace }}\SFML-2.5.1-build\bin\Release"
         Copy-Item "$dllPath\sfml-graphics-2.dll" -Destination "build/Release/" -Force
         Copy-Item "$dllPath\sfml-window-2.dll" -Destination "build/Release/" -Force
         Copy-Item "$dllPath\sfml-system-2.dll" -Destination "build/Release/" -Force
