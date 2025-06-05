@@ -50,26 +50,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        choco install sfml -y
-        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-        choco install wixtoolset -y
-
     - name: Build with CMake
       run: |
         mkdir build
         cd build
-        cmake -DSFML_DIR="C:/ProgramData/chocolatey/lib/sfml/tools/cmake" ..
+        cmake -DSFML_DIR="${{ github.workspace }}/SFML-2.5.1/lib/cmake/SFML" ..
         cmake --build . --config Release --target install
 
     - name: Copy SFML DLLs
       shell: pwsh
       run: |
-        $dllPath = "C:/ProgramData/chocolatey/lib/sfml/tools/bin"
-        Copy-Item "$dllPath/sfml-graphics-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "$dllPath/sfml-window-2.dll" -Destination "build/Release/" -Force
-        Copy-Item "$dllPath/sfml-system-2.dll" -Destination "build/Release/" -Force
+        $dllPath = "${{ github.workspace }}\SFML-2.5.1\bin"
+        Copy-Item "$dllPath\sfml-graphics-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "$dllPath\sfml-window-2.dll" -Destination "build/Release/" -Force
+        Copy-Item "$dllPath\sfml-system-2.dll" -Destination "build/Release/" -Force
 
     - name: Create MSI package
       shell: pwsh
