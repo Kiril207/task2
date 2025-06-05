@@ -12,7 +12,6 @@ set(CPACK_GENERATOR "DEB")
 
 include(CPack)
 
-# Добавляем SFML как submodule
 add_subdirectory(external/SFML)
 
 add_executable(snake main.cpp)

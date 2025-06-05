@@ -66,8 +66,8 @@ jobs:
         cmake ..
         cmake --build . --config Release
 
-    # Если потребуется копировать DLL для MSI, можно добавить шаг копирования как раньше,
-    # но если snake.exe запускается из build/Release, SFML DLL уже должны быть рядом с .exe
+    # Если snake.exe запускается из build/Release, SFML DLL уже должны быть рядом с .exe.
+    # Если потребуется, добавь копирование DLL сюда.
 
     - name: Create MSI package
       shell: pwsh
